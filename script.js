@@ -19,45 +19,6 @@ function handleMove(cellIndex) {
     if (checkWin()) {
         statusDisplay.innerText = `${currentPlayer} wins!`;
         gameActive = false;
-        return;
-    }
-    if (checkDraw()) {
-        statusDisplay.innerText = 'Draw!';
-        gameActive = false;
-        return;
-    }
-
-    currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-    statusDisplay.innerText = `${currentPlayer}'s turn`;
-}
-
-function checkWin() {
-    return winPatterns.some(pattern => {
-        return pattern.every(index => {
-            return board[index] === currentPlayer;
-        });
-    });
-}
-
-function checkDraw() {
-    return board.every(cell => cell !== '');
-}
-
-function resetGame() {
-    currentPlayer = 'X';
-    board = ['', '', '', '', '', '', '', '', ''];
-    gameActive = true;
-    statusDisplay.innerText = `${currentPlayer}'s turn`;
-    Array.from(gameBoard.children).forEach(cell => cell.innerText = '');
-}
-function handleMove(cellIndex) {
-    if (!gameActive || board[cellIndex] !== '') return;
-
-    board[cellIndex] = currentPlayer;
-    gameBoard.children[cellIndex].innerText = currentPlayer;
-    if (checkWin()) {
-        statusDisplay.innerText = `${currentPlayer} wins!`;
-        gameActive = false;
         // Apply strike animation to winning cells
         applyStrikeAnimation();
         return;
@@ -88,9 +49,17 @@ function applyStrikeAnimation() {
     });
 }
 
+function checkWin() {
+    return winPatterns.some(pattern => {
+        return pattern.every(index => {
+            return board[index] === currentPlayer;
+        });
+    });
+}
 
-
-
+function checkDraw() {
+    return board.every(cell => cell !== '');
+}
 
 function resetGame() {
     currentPlayer = 'X';
@@ -99,7 +68,7 @@ function resetGame() {
     statusDisplay.innerText = `${currentPlayer}'s turn`;
     Array.from(gameBoard.children).forEach(cell => {
         cell.innerText = '';
-        cell.classList.remove('strike');
+        cell.classList.remove('winning-pattern');
     });
 }
 
@@ -111,6 +80,3 @@ function toggleDarkMode() {
         document.body.classList.add('light-mode');
     }
 }
-
-
-
