@@ -1,0 +1,129 @@
+.container {
+    text-align: center;
+}
+
+.game-board {
+    display: grid;
+    grid-template-columns: repeat(3, 100px);
+    gap: 5px;
+    margin-bottom: 20px;
+}
+
+.cell {
+    width: 100px;
+    height: 100px;
+    background-color: lightgray;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 36px;
+    cursor: pointer;
+}
+
+button {
+    font-size: 16px;
+    padding: 10px 20px;
+    cursor: pointer;
+}
+
+p {
+    font-size: 18px;
+    font-weight: bold;
+}
+@keyframes strikeAnimation {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.strike {
+    animation: strikeAnimation 0.5s ease-in-out;
+    animation-iteration-count: 3; /* Number of times the animation repeats */
+    color: red; /* Change the color to match your design */
+}
+.winning-pattern {
+    color: red; /* Change the color of the X or O to red */
+}
+
+/* Other styles... */
+/* Set body background color */
+body {
+    background-color: #222; /* Dark background color */
+    color: #fff; /* Light text color */
+    margin: 0; /* Remove default margin */
+    padding: 0; /* Remove default padding */
+}
+
+/* Dark mode toggle */
+.dark-mode-toggle {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    cursor: pointer;
+    z-index: 1000;
+}
+
+.dark-mode-icon {
+    font-size: 24px;
+}
+
+/* Container styles */
+.container {
+    text-align: center;
+    padding: 20px; /* Add padding to keep content away from edges */
+}
+
+/* Cell styles */
+.cell {
+    width: 100px;
+    height: 100px;
+    background-color: #333; /* Dark cell background color */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 36px;
+    cursor: pointer;
+}
+
+/* Other styles... */
+/* Light mode styles */
+body.light-mode {
+    background-color: #fff; /* Light background color */
+    color: #333; /* Dark text color */
+}
+
+.light-mode .cell {
+    background-color: #b6b3b3;
+    border: 1px solid #ddd; /* Light cell background color */
+}
+
+/* Dark mode styles */
+body.dark-mode {
+    background-color: #222; /* Dark background color */
+    color: #fff; /* Light text color */
+}
+
+.dark-mode .cell {
+    background-color: #333; /* Dark cell background color */
+}
+/* Heading styles */
+h1 {
+    font-size: 48px; /* Increase font size */
+    font-family: 'Arial', sans-serif; /* Change font family */
+    color: #666363; /* Dark text color */
+    text-transform: uppercase; /* Convert text to uppercase */
+    letter-spacing: 2px; /* Add letter spacing */
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2); /* Add text shadow for depth */
+}
+
+
+
+
+
+
