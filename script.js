@@ -2,7 +2,7 @@ let currentPlayer = 'X';
 let board = ['', '', '', '', '', '', '', '', ''];
 let gameActive = true;
 let isSinglePlayer = false;
-let isComputerMoving = false; // Flag to indicate if computer is making a move
+let isComputerMoving = false;
 
 const winPatterns = [
     [0, 1, 2], [3, 4, 5], [6, 7, 8],
@@ -32,54 +32,42 @@ function handleMove(cellIndex) {
     board[cellIndex] = currentPlayer;
     gameBoard.children[cellIndex].innerText = currentPlayer;
 
-    if (checkWin()) {
+    if (checkWin(board, currentPlayer)) {
         endGame(`${currentPlayer} wins!`);
-    } else if (checkDraw()) {
+    } else if (isBoardFull(board)) {
         endGame('Draw!');
     } else {
         currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
         statusDisplay.innerText = `${currentPlayer}'s turn`;
 
         if (isSinglePlayer && currentPlayer === 'O') {
-            isComputerMoving = true; // Set flag to indicate computer is making a move
+            isComputerMoving = true;
             setTimeout(computerMove, 1000);
         }
     }
 }
 
 function computerMove() {
-    let emptyCells = [];
-    board.forEach((cell, index) => {
-        if (cell === '') {
-            emptyCells.push(index);
-        }
-    });
+    const move = nextMove(board, currentPlayer);
+    board[move] = currentPlayer;
+    gameBoard.children[move].innerText = currentPlayer;
 
-    if (emptyCells.length === 0) return; // No empty cells left
-
-    const randomIndex = Math.floor(Math.random() * emptyCells.length);
-    const moveIndex = emptyCells[randomIndex];
-
-    board[moveIndex] = currentPlayer;
-    gameBoard.children[moveIndex].innerText = currentPlayer;
-
-    if (checkWin()) {
+    if (checkWin(board, currentPlayer)) {
         endGame(`${currentPlayer} wins!`);
-    } else if (checkDraw()) {
+    } else if (isBoardFull(board)) {
         endGame('Draw!');
     } else {
         currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
         statusDisplay.innerText = `${currentPlayer}'s turn`;
     }
 
-    isComputerMoving = false; // Reset flag after computer's move
+    isComputerMoving = false;
 }
 
 function endGame(message) {
     statusDisplay.innerText = message;
     gameActive = false;
 
-    // Apply strike animation to winning cells
     if (message.includes('wins')) {
         winPatterns.forEach(pattern => {
             const [a, b, c] = pattern;
@@ -89,11 +77,9 @@ function endGame(message) {
             if (isWinningPattern) {
                 const winningCells = [gameBoard.children[a], gameBoard.children[b], gameBoard.children[c]];
                 winningCells.forEach(cell => {
-                    cell.innerText = symbol; // Ensure the winning symbol is displayed
                     cell.classList.add('winning-pattern');
                 });
 
-                // Remove winning-pattern class after a short delay
                 setTimeout(() => {
                     winningCells.forEach(cell => {
                         cell.classList.remove('winning-pattern');
@@ -102,23 +88,6 @@ function endGame(message) {
             }
         });
     }
-}
-
-
-
-
-
-
-function checkWin() {
-    return winPatterns.some(pattern => {
-        return pattern.every(index => {
-            return board[index] === currentPlayer;
-        });
-    });
-}
-
-function checkDraw() {
-    return board.every(cell => cell !== '');
 }
 
 function resetGame() {
@@ -149,3 +118,126 @@ function goBack() {
     resetGame();
 }
 
+// Helper functions for the nextMove algorithm
+function checkWin(board, player) {
+    const winConditions = [
+        [0, 1, 2], [3, 4, 5], [6, 7, 8],
+        [0, 3, 6], [1, 4, 7], [2, 5, 8],
+        [0, 4, 8], [2, 4, 6]
+    ];
+
+    return winConditions.some(combination =>
+        combination.every(cell => board[cell] === player)
+    );
+}
+
+function isBoardFull(board) {
+    return board.every(cell => cell !== '');
+}
+
+function emptySquares(board) {
+    return board.reduce((empty, cell, index) => {
+        if (cell === '') empty.push(index);
+        return empty;
+    }, []);
+}
+
+function copyBoard(board) {
+    return board.slice();
+}
+
+function simulateMove(board, index, player) {
+    const newBoard = copyBoard(board);
+    newBoard[index] = player;
+    return newBoard;
+}
+
+function createsFork(board, player, move) {
+    const newBoard = simulateMove(board, move, player);
+    const availableMoves = emptySquares(newBoard);
+    
+    let count = 0;
+    for (let i = 0; i < availableMoves.length; i++) {
+        const potentialMove = availableMoves[i];
+        const forkBoard = simulateMove(newBoard, potentialMove, player);
+        if (checkWin(forkBoard, player)) {
+            count++;
+            if (count >= 2) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+function findCenter(board) {
+    if (board[4] === '') {
+        return 4;
+    }
+    return -1;
+}
+
+function findOppositeCorner(board, corner) {
+    const oppositeCorners = [[0, 8], [2, 6], [6, 2], [8, 0]];
+    const oppositeCorner = oppositeCorners.find(pair =>
+        board[pair[0]] === '' && corner === pair[1]
+    );
+    return oppositeCorner ? oppositeCorner[0] : -1;
+}
+
+function findEmptyCorner(board) {
+    const corners = [0, 2, 6, 8];
+    const emptyCorner = corners.find(corner => board[corner] === '');
+    return emptyCorner !== undefined ? emptyCorner : -1;
+}
+
+function findEmptySide(board) {
+    const sides = [1, 3, 5, 7];
+    const emptySide = sides.find(side => board[side] === '');
+    return emptySide !== undefined ? emptySide : -1;
+}
+
+function nextMove(board, player) {
+    const availableMoves = emptySquares(board);
+
+    for (let i = 0; i < availableMoves.length; i++) {
+        const move = availableMoves[i];
+        const newBoard = simulateMove(board, move, player);
+        if (checkWin(newBoard, player)) {
+            return move;
+        }
+    }
+
+    const opponent = (player === 'X') ? 'O' : 'X';
+    for (let i = 0; i < availableMoves.length; i++) {
+        const move = availableMoves[i];
+        const newBoard = simulateMove(board, move, opponent);
+        if (checkWin(newBoard, opponent)) {
+            return move;
+        }
+    }
+
+    for (let i = 0; i < availableMoves.length; i++) {
+        const move = availableMoves[i];
+        if (createsFork(board, player, move)) {
+            return move;
+        }
+    }
+
+    let move = findCenter(board);
+    if (move !== -1) return move;
+
+    const opponentCorners = [0, 2, 6, 8].filter(corner => board[corner] === opponent);
+    for (let i = 0; i < opponentCorners.length; i++) {
+        move = findOppositeCorner(board, opponentCorners[i]);
+        if (move !== -1) return move;
+    }
+
+    move = findEmptyCorner(board);
+    if (move !== -1) return move;
+
+    move = findEmptySide(board);
+    if (move !== -1) return move;
+
+    return availableMoves[Math.floor(Math.random() * availableMoves.length)];
+}
