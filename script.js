@@ -34,7 +34,7 @@ function handleMove(cellIndex) {
 
     if (checkWin(board, currentPlayer)) {
         endGame(`${currentPlayer} wins!`);
-    } else if (isBoardFull(board)) {
+    } else if (checkDraw()) {
         endGame('Draw!');
     } else {
         currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
@@ -48,13 +48,13 @@ function handleMove(cellIndex) {
 }
 
 function computerMove() {
-    const move = nextMove(board, currentPlayer);
-    board[move] = currentPlayer;
-    gameBoard.children[move].innerText = currentPlayer;
+    const bestMove = nextMove(board, currentPlayer);
+    board[bestMove] = currentPlayer;
+    gameBoard.children[bestMove].innerText = currentPlayer;
 
     if (checkWin(board, currentPlayer)) {
         endGame(`${currentPlayer} wins!`);
-    } else if (isBoardFull(board)) {
+    } else if (checkDraw()) {
         endGame('Draw!');
     } else {
         currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
@@ -68,26 +68,32 @@ function endGame(message) {
     statusDisplay.innerText = message;
     gameActive = false;
 
-    if (message.includes('wins')) {
+    if (message === 'Draw!') {
+        Array.from(gameBoard.children).forEach(cell => {
+            cell.classList.add('draw-pattern');
+        });
+    } else if (message.includes('wins')) {
         winPatterns.forEach(pattern => {
             const [a, b, c] = pattern;
-            const symbol = board[a];
-            const isWinningPattern = symbol !== '' && board[b] === symbol && board[c] === symbol;
-
-            if (isWinningPattern) {
-                const winningCells = [gameBoard.children[a], gameBoard.children[b], gameBoard.children[c]];
-                winningCells.forEach(cell => {
+            if (board[a] === currentPlayer && board[b] === currentPlayer && board[c] === currentPlayer) {
+                [gameBoard.children[a], gameBoard.children[b], gameBoard.children[c]].forEach(cell => {
                     cell.classList.add('winning-pattern');
                 });
-
-                setTimeout(() => {
-                    winningCells.forEach(cell => {
-                        cell.classList.remove('winning-pattern');
-                    });
-                }, 800);
             }
         });
     }
+}
+
+function checkWin(board, player) {
+    return winPatterns.some(pattern => {
+        return pattern.every(index => {
+            return board[index] === player;
+        });
+    });
+}
+
+function checkDraw() {
+    return board.every(cell => cell !== '');
 }
 
 function resetGame() {
@@ -97,6 +103,8 @@ function resetGame() {
     statusDisplay.innerText = `${currentPlayer}'s turn`;
     Array.from(gameBoard.children).forEach(cell => {
         cell.innerText = '';
+        cell.classList.remove('draw-pattern');
+        cell.classList.remove('winning-pattern');
     });
 }
 
@@ -118,23 +126,7 @@ function goBack() {
     resetGame();
 }
 
-// Helper functions for the nextMove algorithm
-function checkWin(board, player) {
-    const winConditions = [
-        [0, 1, 2], [3, 4, 5], [6, 7, 8],
-        [0, 3, 6], [1, 4, 7], [2, 5, 8],
-        [0, 4, 8], [2, 4, 6]
-    ];
-
-    return winConditions.some(combination =>
-        combination.every(cell => board[cell] === player)
-    );
-}
-
-function isBoardFull(board) {
-    return board.every(cell => cell !== '');
-}
-
+/* AI Helper Functions */
 function emptySquares(board) {
     return board.reduce((empty, cell, index) => {
         if (cell === '') empty.push(index);
@@ -142,12 +134,8 @@ function emptySquares(board) {
     }, []);
 }
 
-function copyBoard(board) {
-    return board.slice();
-}
-
 function simulateMove(board, index, player) {
-    const newBoard = copyBoard(board);
+    const newBoard = board.slice();
     newBoard[index] = player;
     return newBoard;
 }
@@ -171,10 +159,7 @@ function createsFork(board, player, move) {
 }
 
 function findCenter(board) {
-    if (board[4] === '') {
-        return 4;
-    }
-    return -1;
+    return board[4] === '' ? 4 : -1;
 }
 
 function findOppositeCorner(board, corner) {
@@ -187,38 +172,31 @@ function findOppositeCorner(board, corner) {
 
 function findEmptyCorner(board) {
     const corners = [0, 2, 6, 8];
-    const emptyCorner = corners.find(corner => board[corner] === '');
-    return emptyCorner !== undefined ? emptyCorner : -1;
+    return corners.find(corner => board[corner] === '') ?? -1;
 }
 
 function findEmptySide(board) {
     const sides = [1, 3, 5, 7];
-    const emptySide = sides.find(side => board[side] === '');
-    return emptySide !== undefined ? emptySide : -1;
+    return sides.find(side => board[side] === '') ?? -1;
 }
 
 function nextMove(board, player) {
     const availableMoves = emptySquares(board);
+    const opponent = player === 'X' ? 'O' : 'X';
 
-    for (let i = 0; i < availableMoves.length; i++) {
-        const move = availableMoves[i];
-        const newBoard = simulateMove(board, move, player);
-        if (checkWin(newBoard, player)) {
+    for (const move of availableMoves) {
+        if (checkWin(simulateMove(board, move, player), player)) {
             return move;
         }
     }
 
-    const opponent = (player === 'X') ? 'O' : 'X';
-    for (let i = 0; i < availableMoves.length; i++) {
-        const move = availableMoves[i];
-        const newBoard = simulateMove(board, move, opponent);
-        if (checkWin(newBoard, opponent)) {
+    for (const move of availableMoves) {
+        if (checkWin(simulateMove(board, move, opponent), opponent)) {
             return move;
         }
     }
 
-    for (let i = 0; i < availableMoves.length; i++) {
-        const move = availableMoves[i];
+    for (const move of availableMoves) {
         if (createsFork(board, player, move)) {
             return move;
         }
@@ -228,8 +206,8 @@ function nextMove(board, player) {
     if (move !== -1) return move;
 
     const opponentCorners = [0, 2, 6, 8].filter(corner => board[corner] === opponent);
-    for (let i = 0; i < opponentCorners.length; i++) {
-        move = findOppositeCorner(board, opponentCorners[i]);
+    for (const corner of opponentCorners) {
+        move = findOppositeCorner(board, corner);
         if (move !== -1) return move;
     }
 

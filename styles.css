@@ -60,12 +60,12 @@ button:hover {
     align-items: center;
     font-size: 36px;
     cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.3s ease;
+    border: 2px solid transparent; /* Initial border color */
+    transition: border-color 0.3s ease; /* Transition for border color */
 }
 
 .cell:hover {
-    background-color: #444;
-    transform: scale(1.1);
+    border-color: white; /* Border color change on hover */
 }
 
 .winning-pattern {
@@ -113,4 +113,9 @@ body.light-mode {
 
 .dark-mode .cell {
     background-color: #333;
+}
+/* Add this new class for draw condition */
+.draw-pattern {
+    border-color: white;
+    transition: border-color 0.3s ease; /* Ensure smooth transition */
 }
