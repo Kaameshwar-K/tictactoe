@@ -1,53 +1,113 @@
 let currentPlayer = 'X';
 let board = ['', '', '', '', '', '', '', '', ''];
 let gameActive = true;
+let isSinglePlayer = false;
+let isComputerMoving = false; // Flag to indicate if computer is making a move
 
 const winPatterns = [
-    [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
-    [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
-    [0, 4, 8], [2, 4, 6]              // Diagonals
+    [0, 1, 2], [3, 4, 5], [6, 7, 8],
+    [0, 3, 6], [1, 4, 7], [2, 5, 8],
+    [0, 4, 8], [2, 4, 6]
 ];
 
 const gameBoard = document.getElementById('gameBoard');
 const statusDisplay = document.getElementById('status');
+const modeSelection = document.getElementById('modeSelection');
+const resetButton = document.getElementById('resetButton');
+const backButton = document.getElementById('backButton');
 
-function handleMove(cellIndex) {
-    if (!gameActive || board[cellIndex] !== '') return;
-
-    board[cellIndex] = currentPlayer;
-    gameBoard.children[cellIndex].innerText = currentPlayer;
-    if (checkWin()) {
-        statusDisplay.innerText = `${currentPlayer} wins!`;
-        gameActive = false;
-        // Apply strike animation to winning cells
-        applyStrikeAnimation();
-        return;
-    }
-    if (checkDraw()) {
-        statusDisplay.innerText = 'Draw!';
-        gameActive = false;
-        return;
-    }
-
-    currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+function selectMode(mode) {
+    isSinglePlayer = (mode === 'single');
+    modeSelection.classList.add('hidden');
+    gameBoard.classList.remove('hidden');
+    statusDisplay.classList.remove('hidden');
+    resetButton.classList.remove('hidden');
+    backButton.classList.remove('hidden');
     statusDisplay.innerText = `${currentPlayer}'s turn`;
 }
 
-function applyStrikeAnimation() {
-    winPatterns.forEach(pattern => {
-        const [a, b, c] = pattern;
-        const cells = gameBoard.children;
+function handleMove(cellIndex) {
+    if (!gameActive || board[cellIndex] !== '' || isComputerMoving) return;
 
-        const symbol = board[a]; // Get the symbol (X or O) of the first cell in the pattern
-        const isWinningPattern = symbol !== '' && board[b] === symbol && board[c] === symbol;
+    board[cellIndex] = currentPlayer;
+    gameBoard.children[cellIndex].innerText = currentPlayer;
 
-        if (isWinningPattern) {
-            cells[a].classList.add('winning-pattern');
-            cells[b].classList.add('winning-pattern');
-            cells[c].classList.add('winning-pattern');
+    if (checkWin()) {
+        endGame(`${currentPlayer} wins!`);
+    } else if (checkDraw()) {
+        endGame('Draw!');
+    } else {
+        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+        statusDisplay.innerText = `${currentPlayer}'s turn`;
+
+        if (isSinglePlayer && currentPlayer === 'O') {
+            isComputerMoving = true; // Set flag to indicate computer is making a move
+            setTimeout(computerMove, 1000);
+        }
+    }
+}
+
+function computerMove() {
+    let emptyCells = [];
+    board.forEach((cell, index) => {
+        if (cell === '') {
+            emptyCells.push(index);
         }
     });
+
+    if (emptyCells.length === 0) return; // No empty cells left
+
+    const randomIndex = Math.floor(Math.random() * emptyCells.length);
+    const moveIndex = emptyCells[randomIndex];
+
+    board[moveIndex] = currentPlayer;
+    gameBoard.children[moveIndex].innerText = currentPlayer;
+
+    if (checkWin()) {
+        endGame(`${currentPlayer} wins!`);
+    } else if (checkDraw()) {
+        endGame('Draw!');
+    } else {
+        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+        statusDisplay.innerText = `${currentPlayer}'s turn`;
+    }
+
+    isComputerMoving = false; // Reset flag after computer's move
 }
+
+function endGame(message) {
+    statusDisplay.innerText = message;
+    gameActive = false;
+
+    // Apply strike animation to winning cells
+    if (message.includes('wins')) {
+        winPatterns.forEach(pattern => {
+            const [a, b, c] = pattern;
+            const symbol = board[a];
+            const isWinningPattern = symbol !== '' && board[b] === symbol && board[c] === symbol;
+
+            if (isWinningPattern) {
+                const winningCells = [gameBoard.children[a], gameBoard.children[b], gameBoard.children[c]];
+                winningCells.forEach(cell => {
+                    cell.innerText = symbol; // Ensure the winning symbol is displayed
+                    cell.classList.add('winning-pattern');
+                });
+
+                // Remove winning-pattern class after a short delay
+                setTimeout(() => {
+                    winningCells.forEach(cell => {
+                        cell.classList.remove('winning-pattern');
+                    });
+                }, 800);
+            }
+        });
+    }
+}
+
+
+
+
+
 
 function checkWin() {
     return winPatterns.some(pattern => {
@@ -68,7 +128,6 @@ function resetGame() {
     statusDisplay.innerText = `${currentPlayer}'s turn`;
     Array.from(gameBoard.children).forEach(cell => {
         cell.innerText = '';
-        cell.classList.remove('winning-pattern');
     });
 }
 
@@ -80,3 +139,13 @@ function toggleDarkMode() {
         document.body.classList.add('light-mode');
     }
 }
+
+function goBack() {
+    gameBoard.classList.add('hidden');
+    statusDisplay.classList.add('hidden');
+    resetButton.classList.add('hidden');
+    backButton.classList.add('hidden');
+    modeSelection.classList.remove('hidden');
+    resetGame();
+}
+
