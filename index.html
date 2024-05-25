@@ -12,7 +12,11 @@
     </div>
     <div class="container">
         <h1>Tic Tac Toe</h1>
-        <div id="gameBoard" class="game-board">
+        <div id="modeSelection" class="mode-selection">
+            <button onclick="selectMode('single')">Single Player</button>
+            <button onclick="selectMode('two')">Two Player</button>
+        </div>
+        <div id="gameBoard" class="game-board hidden">
             <div class="cell" onclick="handleMove(0)"></div>
             <div class="cell" onclick="handleMove(1)"></div>
             <div class="cell" onclick="handleMove(2)"></div>
@@ -23,8 +27,10 @@
             <div class="cell" onclick="handleMove(7)"></div>
             <div class="cell" onclick="handleMove(8)"></div>
         </div>
-        <button onclick="resetGame()">Reset</button>
-        <p id="status"></p>
+        <button id="resetButton" class="hidden" onclick="resetGame()">Reset</button>
+        <button id="backButton" class="hidden" onclick="goBack()">Back</button>
+        
+        <p id="status" class="hidden"></p>
     </div>
     <script src="script.js"></script>
 </body>
